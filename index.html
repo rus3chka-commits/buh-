@@ -104,6 +104,50 @@
     white-space: nowrap;
   }
   .logo span{ color: var(--gold); font-weight: 300; font-size: 13px; letter-spacing: 4px; }
+  .header-actions{ display:flex; gap: 10px; align-items:center; }
+
+  /* экран входа */
+  body.locked > header, body.locked > main, body.locked > footer{ display:none; }
+  .lock{
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px 16px;
+  }
+  .lock-box{
+    width: min(400px, 100%);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 36px 32px 32px;
+  }
+  .lock-box .logo{ margin-bottom: 28px; }
+  .lock-box h1{ font-size: 24px; margin-bottom: 20px; }
+  .lock-box .btn{ width: 100%; margin-top: 4px; }
+  .lock-error{ color: var(--danger); font-size: 14px; margin: -8px 0 16px; }
+  .segmented{ display:flex; }
+  .field .segmented label{
+    flex: 1 1 0;
+    margin: 0;
+    text-align:center;
+    padding: 12px 8px;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-left-width: 0;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .field .segmented label:first-of-type{ border-left-width: 1px; border-radius: 4px 0 0 4px; }
+  .field .segmented label:last-of-type{ border-radius: 0 4px 4px 0; }
+  .segmented input{ position:absolute; opacity:0; width:0; height:0; }
+  .field .segmented input:checked + label{ background: var(--gold); color: #131210; font-weight: 700; border-color: var(--gold); }
+  .segmented input:focus-visible + label{ outline: 2px solid var(--gold); outline-offset: 2px; }
+  .pill.general{ color: var(--muted); border-color: var(--border); background: transparent; }
+  .deal.general .deal-client{ color: var(--muted); }
 
   /* hero + итоги */
   .hero{ padding-top: 130px; padding-bottom: 48px; }
@@ -442,7 +486,8 @@
       border-bottom: 1px solid var(--border);
     }
     .exp-row .exp-item{ grid-column: 1 / -1; }
-    #headerAdd{ padding: 10px 14px; font-size: 11px; }
+    .header-actions{ gap: 8px; }
+    .header-actions .btn{ padding: 10px 12px; font-size: 11px; letter-spacing: .5px; }
   }
   @media (max-width: 480px){
     .stats-grid{ grid-template-columns: 1fr; }
@@ -451,12 +496,33 @@
   }
 </style>
 </head>
-<body>
+<body class="locked">
+
+<!-- Вход по паролю -->
+<div class="lock" id="lock">
+  <form class="lock-box" id="lockForm" novalidate>
+    <div class="logo">Этно<span>Консалт</span></div>
+    <h1>Бухгалтерия</h1>
+    <div class="field">
+      <label for="lockPassword">Пароль</label>
+      <input type="password" id="lockPassword" autocomplete="current-password" inputmode="numeric" required autofocus>
+    </div>
+    <div class="lock-error" id="lockError" hidden></div>
+    <div class="field">
+      <label class="check" style="display:flex;text-transform:none;letter-spacing:0;font-size:14px;"><input type="checkbox" id="lockRemember" checked> Запомнить на этом устройстве</label>
+    </div>
+    <button type="submit" class="btn">Войти</button>
+  </form>
+</div>
 
 <header>
   <div class="container">
     <div class="logo">Этно<span>Консалт</span></div>
-    <button type="button" class="btn btn-sm" id="headerAdd">Новая карточка</button>
+    <div class="header-actions">
+      <button type="button" class="icon-btn" id="logoutBtn" title="Закрыть бухгалтерию паролем">Выйти</button>
+      <button type="button" class="btn btn-outline btn-sm" id="headerExpense">Расход</button>
+      <button type="button" class="btn btn-sm" id="headerAdd">Новая карточка</button>
+    </div>
   </div>
 </header>
 
@@ -518,6 +584,14 @@
         <div class="filter-group">
           <label for="serviceFilter">Услуга</label>
           <select id="serviceFilter"></select>
+        </div>
+        <div class="filter-group">
+          <label for="kindFilter">Записи</label>
+          <select id="kindFilter">
+            <option value="all">Все</option>
+            <option value="deal">С клиентом</option>
+            <option value="general">Без клиента</option>
+          </select>
         </div>
         <div class="filter-group">
           <label for="payFilter">Оплата</label>
@@ -594,7 +668,14 @@
       <button type="button" class="close-btn" data-close aria-label="Закрыть">×</button>
     </div>
 
-    <div class="form-row">
+    <div class="field">
+      <div class="segmented" role="radiogroup" aria-label="Тип записи">
+        <input type="radio" name="kind" id="kindDeal" value="deal" checked><label for="kindDeal">Клиент и услуга</label>
+        <input type="radio" name="kind" id="kindGeneral" value="general"><label for="kindGeneral">Расход без клиента</label>
+      </div>
+    </div>
+
+    <div class="form-row" data-deal-only>
       <div class="field">
         <label for="client">Клиент <span class="req">*</span></label>
         <input type="text" id="client" name="client" required maxlength="120" placeholder="Имя или компания">
@@ -606,7 +687,7 @@
     </div>
 
     <div class="form-row">
-      <div class="field">
+      <div class="field" data-deal-only>
         <label for="service">Услуга</label>
         <input type="text" id="service" name="service" list="serviceList" maxlength="120" placeholder="Какая услуга">
         <datalist id="serviceList"></datalist>
@@ -615,10 +696,17 @@
         <label for="date">Дата</label>
         <input type="date" id="date" name="date" required>
       </div>
+      <div class="field" data-general-only>
+        <label for="generalCurrency">Валюта</label>
+        <select id="generalCurrency">
+          <option value="KGS">Сомы (KGS)</option>
+          <option value="USD">Доллары (USD)</option>
+        </select>
+      </div>
     </div>
 
-    <div class="group-title">Оплата</div>
-    <div class="form-row three">
+    <div class="group-title" data-deal-only>Оплата</div>
+    <div class="form-row three" data-deal-only>
       <div class="field">
         <label for="price">Стоимость услуги</label>
         <input type="number" id="price" name="price" min="0" step="0.01" inputmode="decimal" placeholder="0">
@@ -635,7 +723,7 @@
         </select>
       </div>
     </div>
-    <div class="field">
+    <div class="field" data-deal-only>
       <span class="label">Остаток</span>
       <div class="readonly-num" id="restView">0</div>
       <label class="check"><input type="checkbox" id="restPaid" name="restPaid"> Остаток получен, услуга оплачена полностью</label>
@@ -648,7 +736,7 @@
     <div class="exp-rows" id="expRows"></div>
     <div class="exp-total">
       <button type="button" class="btn btn-outline btn-sm" id="addExpense">+ Добавить расход</button>
-      <span>Расходы: <strong id="expTotalView">0</strong> · Прибыль: <strong class="profit" id="profitView">0</strong></span>
+      <span>Расходы: <strong id="expTotalView">0</strong><span data-deal-only> · Прибыль: <strong class="profit" id="profitView">0</strong></span></span>
     </div>
 
     <div class="field">
@@ -705,7 +793,13 @@
   var APP_ID = 'etno-accounting';
   // Адрес веб-приложения Google Apps Script: таблица подключена сразу,
   // вставлять его вручную в каждом браузере не нужно.
-  var DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzS-KyelNNxfSmqVpchHyuLBbcf0X-IHIi0bnOmEovqUspXo-w8tXnfbRk4rsbwnfH/exec';
+  // Пароль на вход. Здесь хранится только его отпечаток (SHA-256 от 'etno-accounting:' + пароль).
+  // Сам пароль проверяет и Google Apps Script: без него таблица данные не отдаёт.
+  var PASSWORD_HASH = 'caa1ab7c39fda3c66637c13f97667e5dd52bc1fa49a95d460b0a742d40f2f0f1';
+  var PASS_KEY = 'etno_accounting_pass';
+  var password = '';
+  var unlocked = false;
+  var DEFAULT_SCRIPT_URL ='https://script.google.com/macros/s/AKfycbwzS-KyelNNxfSmqVpchHyuLBbcf0X-IHIi0bnOmEovqUspXo-w8tXnfbRk4rsbwnfH/exec';
 
   var DEFAULT_CATEGORIES = ['Транспорт', 'Проживание', 'Питание', 'Подрядчики', 'Зарплата', 'Реклама', 'Аренда', 'Материалы', 'Налоги и сборы', 'Связь и интернет', 'Прочее'];
   var CATEGORY_COLORS = ['#e8b86d', '#6fb1e8', '#62c584', '#ff8f8f', '#c79bf0', '#5fd0c5', '#f0a35e', '#e58fc0', '#a8c66c', '#8fa7ff', '#9a958a'];
@@ -787,6 +881,9 @@
   }
 
   // ---------- расчёты по карточке ----------
+  // Расход без клиента: карточка с пустым клиентом, без услуги и оплаты
+  function isGeneral(d){ return !(d.client || '').trim(); }
+  function titleOf(d){ return isGeneral(d) ? 'Без клиента' : d.client; }
   function paidOf(d){ return d.restPaid ? Math.max(num(d.price), num(d.prepayment)) : num(d.prepayment); }
   function restOf(d){ return Math.max(num(d.price) - paidOf(d), 0); }
   function expensesOf(d){ return Array.isArray(d.expenses) ? d.expenses : []; }
@@ -836,15 +933,19 @@
     var q = $('search').value.trim().toLowerCase();
     var service = $('serviceFilter').value;
     var pay = $('payFilter').value;
+    var kind = $('kindFilter').value;
     return state.deals.filter(function(d){
+      var general = isGeneral(d);
       if ((d.currency || 'KGS') !== state.prefs.currency) return false;
       if (range.from && d.date < range.from) return false;
       if (range.to && d.date > range.to) return false;
+      if (kind === 'deal' && general) return false;
+      if (kind === 'general' && !general) return false;
       if (service && (d.service || '').trim() !== service) return false;
       if (pay === 'debt' && restOf(d) <= 0) return false;
-      if (pay === 'paid' && restOf(d) > 0) return false;
+      if (pay === 'paid' && (general || restOf(d) > 0)) return false;
       if (!q) return true;
-      var text = [d.client, d.contact, d.service, d.note].concat(expensesOf(d).map(function(x){ return x.item + ' ' + x.category; }));
+      var text = [titleOf(d), d.contact, d.service, d.note].concat(expensesOf(d).map(function(x){ return x.item + ' ' + x.category; }));
       return text.join(' ').toLowerCase().indexOf(q) !== -1;
     });
   }
@@ -862,7 +963,7 @@
     }[sort];
     return list.sort(function(a, b){
       if (key) return key(b) - key(a);
-      if (sort === 'client') return (a.client || '').localeCompare(b.client || '', 'ru');
+      if (sort === 'client') return titleOf(a).localeCompare(titleOf(b), 'ru');
       var byDate = a.date < b.date ? -1 : a.date > b.date ? 1 : (a.createdAt || '') < (b.createdAt || '') ? -1 : 1;
       return sort === 'date-asc' ? byDate : -byDate;
     });
@@ -1018,15 +1119,18 @@
       });
       var shown = exps.slice(0, 4);
       var profit = profitOf(d);
-      var card = el('article', { 'class': 'deal', tabindex: '0', role: 'button', 'aria-label': 'Открыть карточку ' + d.client }, [
+      var general = isGeneral(d);
+      var card = el('article', { 'class': 'deal' + (general ? ' general' : ''), tabindex: '0', role: 'button', 'aria-label': 'Открыть карточку ' + titleOf(d) }, [
         el('div', { 'class': 'deal-head' }, [
           el('div', null, [
-            el('div', { 'class': 'deal-client', text: d.client }),
-            el('div', { 'class': 'deal-service', text: [d.service || 'Услуга не указана', ruDate(d.date)].filter(Boolean).join(' · ') })
+            el('div', { 'class': 'deal-client', text: general ? 'Расход без клиента' : d.client }),
+            el('div', { 'class': 'deal-service', text: general ? ruDate(d.date) : [d.service || 'Услуга не указана', ruDate(d.date)].filter(Boolean).join(' · ') })
           ]),
-          el('span', { 'class': 'pill ' + (rest > 0 ? 'debt' : 'paid'), text: rest > 0 ? 'Есть остаток' : 'Оплачено' })
+          general
+            ? el('span', { 'class': 'pill general', text: '−' + money(expenseSum(d, false), cur) })
+            : el('span', { 'class': 'pill ' + (rest > 0 ? 'debt' : 'paid'), text: rest > 0 ? 'Есть остаток' : 'Оплачено' })
         ]),
-        el('dl', { 'class': 'money' }, [
+        general ? null : el('dl', { 'class': 'money' }, [
           el('div', null, [el('dt', { text: 'Стоимость' }), el('dd', { text: money(num(d.price), cur) })]),
           el('div', null, [el('dt', { text: 'Предоплата' }), el('dd', { text: money(num(d.prepayment), cur) })]),
           el('div', null, [el('dt', { text: 'Остаток' }), el('dd', { 'class': rest > 0 ? 'debt' : '', text: money(rest, cur) })]),
@@ -1039,10 +1143,12 @@
             el('span', { 'class': 'sum', text: money(num(x.amount), cur) })
           ]);
         }).concat(exps.length > shown.length ? [el('li', { 'class': 'more', text: 'и ещё ' + (exps.length - shown.length) })] : [])) : null,
-        el('div', { 'class': 'deal-foot' }, [
-          el('span', { text: d.contact || '' }),
-          el('span', null, ['Прибыль: ', el('span', { 'class': 'profit' + (profit < 0 ? ' loss' : ''), text: money(profit, cur) })])
-        ])
+        general
+          ? (d.note ? el('div', { 'class': 'deal-foot' }, [el('span', { 'class': 'deal-service', text: d.note })]) : null)
+          : el('div', { 'class': 'deal-foot' }, [
+              el('span', { text: d.contact || '' }),
+              el('span', null, ['Прибыль: ', el('span', { 'class': 'profit' + (profit < 0 ? ' loss' : ''), text: money(profit, cur) })])
+            ])
       ]);
       card.addEventListener('click', function(){ openDeal(d.id); });
       card.addEventListener('keydown', function(e){
@@ -1077,12 +1183,26 @@
   var dealForm = $('dealForm');
   var FIELDS = ['client', 'contact', 'service', 'date', 'price', 'prepayment', 'currency', 'note'];
 
-  function openDeal(id){
+  function formGeneral(){ return dealForm.elements.kind.value === 'general'; }
+  // Переключение «Клиент и услуга» / «Расход без клиента» в форме
+  function applyKind(){
+    var general = formGeneral();
+    Array.prototype.forEach.call(dealForm.querySelectorAll('[data-deal-only]'), function(n){ n.hidden = general; });
+    Array.prototype.forEach.call(dealForm.querySelectorAll('[data-general-only]'), function(n){ n.hidden = !general; });
+    $('client').required = !general;
+    if (!editingId) $('dealDialogTitle').textContent = general ? 'Новый расход' : 'Новая карточка';
+    updateTotals();
+  }
+
+  function openDeal(id, general){
     var d = id ? findDeal(id) : null;
     editingId = d ? d.id : null;
     dealForm.reset();
-    $('dealDialogTitle').textContent = d ? d.client : 'Новая карточка';
+    if (d) general = isGeneral(d);
+    $('dealDialogTitle').textContent = d ? (general ? 'Расход без клиента' : d.client) : '';
     $('deleteDeal').hidden = !d;
+    dealForm.elements.kind.value = general ? 'general' : 'deal';
+    $('generalCurrency').value = d ? (d.currency || 'KGS') : state.prefs.currency;
     var list = $('serviceList');
     list.textContent = '';
     allServices().forEach(function(s){ list.appendChild(el('option', { value: s })); });
@@ -1096,9 +1216,10 @@
     draftExpenses = d ? expensesOf(d).map(function(x){ return { id: x.id, item: x.item, category: x.category, amount: x.amount }; }) : [];
     if (!draftExpenses.length) draftExpenses.push(blankExpense());
     renderExpenseRows();
+    applyKind();
     dealDialog.showModal();
     dealDialog.scrollTop = 0;
-    $('client').focus();
+    if (general) $('expRows').querySelector('.exp-item').focus(); else $('client').focus();
   }
   function blankExpense(){ return { id: newId(), item: '', category: DEFAULT_CATEGORIES[0], amount: '' }; }
 
@@ -1148,7 +1269,7 @@
   });
 
   function updateTotals(){
-    var cur = $('currency').value;
+    var cur = formGeneral() ? $('generalCurrency').value : $('currency').value;
     var price = num($('price').value);
     var pre = num($('prepayment').value);
     var paidAll = $('restPaid').checked;
@@ -1166,12 +1287,24 @@
     if (['price', 'prepayment'].indexOf(e.target.id) !== -1) updateTotals();
   });
   dealForm.addEventListener('change', function(e){
-    if (e.target.id === 'currency' || e.target.id === 'restPaid') updateTotals();
+    if (e.target.name === 'kind') applyKind();
+    if (e.target.id === 'currency' || e.target.id === 'generalCurrency' || e.target.id === 'restPaid') updateTotals();
   });
 
   dealForm.addEventListener('submit', function(e){
     e.preventDefault();
     if (!dealForm.checkValidity()) { dealForm.reportValidity(); return; }
+    var general = formGeneral();
+    var expenses = draftExpenses.filter(function(x){ return (x.item || '').trim() || num(x.amount); }).map(function(x){
+      return { id: x.id || newId(), item: (x.item || '').trim(), category: x.category || 'Прочее', amount: num(x.amount) };
+    });
+    if (general && !expenses.some(function(x){ return x.amount > 0; })) {
+      var first = $('expRows').querySelector('input[type="number"]');
+      first.setCustomValidity('Укажите сумму расхода.');
+      first.reportValidity();
+      first.setCustomValidity('');
+      return;
+    }
     var d = editingId ? findDeal(editingId) : null;
     if (!d) {
       d = { id: newId(), createdAt: stamp() };
@@ -1181,9 +1314,13 @@
     d.price = num($('price').value);
     d.prepayment = num($('prepayment').value);
     d.restPaid = $('restPaid').checked;
-    d.expenses = draftExpenses.filter(function(x){ return (x.item || '').trim() || num(x.amount); }).map(function(x){
-      return { id: x.id || newId(), item: (x.item || '').trim(), category: x.category || 'Прочее', amount: num(x.amount) };
-    });
+    if (general) {
+      d.client = d.contact = d.service = '';
+      d.price = d.prepayment = 0;
+      d.restPaid = false;
+      d.currency = $('generalCurrency').value;
+    }
+    d.expenses = expenses;
     d.updatedAt = stamp();
     markDirty(d);
     saveState();
@@ -1194,7 +1331,7 @@
 
   $('deleteDeal').addEventListener('click', function(){
     var d = findDeal(editingId);
-    if (!d || !confirm('Удалить карточку «' + d.client + '»? Вернуть её будет нельзя.')) return;
+    if (!d || !confirm('Удалить карточку «' + titleOf(d) + '»? Вернуть её будет нельзя.')) return;
     state.deals = state.deals.filter(function(x){ return x.id !== d.id; });
     state.deletes.push(d.id);
     saveState();
@@ -1205,9 +1342,14 @@
 
   // ---------- Google Таблица ----------
   function api(payload){
+    payload.password = password;
     return fetch(state.scriptUrl, { method: 'POST', body: JSON.stringify(payload) })
       .then(function(r){ return r.json(); })
       .then(function(j){
+        if (j.code === 'auth') {
+          lock('Пароль не подошёл к Google Таблице. Введите актуальный пароль.');
+          throw new Error('неверный пароль');
+        }
         if (j.result !== 'success') throw new Error(j.message || 'скрипт вернул ошибку');
         // Старый скрипт CRM отвечает успехом, но карточек не хранит
         if (j.app !== APP_ID) throw new Error('по этому адресу установлен другой скрипт, нужен новый из файла google-apps-script.js');
@@ -1340,7 +1482,7 @@
   $('exportDeals').addEventListener('click', function(){
     var head = ['Дата', 'Клиент', 'Контакт', 'Услуга', 'Валюта', 'Стоимость', 'Предоплата', 'Получено', 'Остаток', 'Расходы', 'Прибыль', 'Заметка'];
     downloadCsv('etno-consult-kartochki.csv', [head].concat(visibleDeals().map(function(d){
-      return [ruDate(d.date), d.client, d.contact, d.service, d.currency, num(d.price), num(d.prepayment), paidOf(d), restOf(d), expenseSum(d, false), profitOf(d), d.note];
+      return [ruDate(d.date), titleOf(d), d.contact, d.service, d.currency, num(d.price), num(d.prepayment), paidOf(d), restOf(d), expenseSum(d, false), profitOf(d), d.note];
     })));
   });
   $('exportExpenses').addEventListener('click', function(){
@@ -1348,7 +1490,7 @@
     var rows = [];
     visibleDeals().forEach(function(d){
       expensesOf(d).filter(inActiveCategories).forEach(function(x){
-        rows.push([ruDate(d.date), d.client, d.service, x.item, x.category, num(x.amount), d.currency]);
+        rows.push([ruDate(d.date), titleOf(d), d.service, x.item, x.category, num(x.amount), d.currency]);
       });
     });
     downloadCsv('etno-consult-rashody.csv', [head].concat(rows));
@@ -1362,7 +1504,9 @@
     var cur = t.getAttribute('data-currency');
     if (cur) { state.prefs.currency = cur; saveState(); render(); }
   });
-  $('headerAdd').addEventListener('click', function(){ openDeal(null); });
+  $('headerAdd').addEventListener('click', function(){ openDeal(null, false); });
+  $('headerExpense').addEventListener('click', function(){ openDeal(null, true); });
+  $('kindFilter').addEventListener('change', render);
   $('search').addEventListener('input', render);
   $('serviceFilter').addEventListener('change', render);
   $('payFilter').addEventListener('change', render);
@@ -1371,15 +1515,88 @@
   $('period').addEventListener('change', function(){ state.prefs.period = $('period').value; saveState(); render(); });
   $('sortBy').addEventListener('change', function(){ state.prefs.sort = $('sortBy').value; saveState(); render(); });
 
-  render();
+  // ---------- пароль ----------
+  function sha256(text){
+    if (!window.crypto || !crypto.subtle) return Promise.resolve('');
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return (b < 16 ? '0' : '') + b.toString(16); }).join('');
+    });
+  }
+  function checkPassword(p){
+    return sha256('etno-accounting:' + p).then(function(h){
+      if (h) return h === PASSWORD_HASH;
+      // Страница открыта не по https, и браузер не даёт посчитать отпечаток: спрашиваем таблицу
+      if (!state.scriptUrl) return false;
+      password = p;
+      return api({ action: 'list' }).then(function(){ return true; }, function(){ return false; });
+    });
+  }
+  function readSavedPassword(){
+    try { return sessionStorage.getItem(PASS_KEY) || localStorage.getItem(PASS_KEY) || ''; } catch (e) { return ''; }
+  }
+  function savePassword(p, remember){
+    try {
+      sessionStorage.setItem(PASS_KEY, p);
+      if (remember) localStorage.setItem(PASS_KEY, p); else localStorage.removeItem(PASS_KEY);
+    } catch (e) {}
+  }
+  function forgetPassword(){
+    try { sessionStorage.removeItem(PASS_KEY); localStorage.removeItem(PASS_KEY); } catch (e) {}
+  }
+  function lock(message){
+    unlocked = false;
+    password = '';
+    forgetPassword();
+    Array.prototype.forEach.call(document.querySelectorAll('dialog[open]'), function(d){ d.close(); });
+    // Убираем данные со страницы, пока она закрыта
+    $('deals').textContent = '';
+    $('categoryBars').textContent = '';
+    $('topItems').textContent = '';
+    document.body.classList.add('locked');
+    $('lock').hidden = false;
+    $('lockError').textContent = message || '';
+    $('lockError').hidden = !message;
+    $('lockPassword').value = '';
+    $('lockPassword').focus();
+  }
+  function unlock(p){
+    password = p;
+    unlocked = true;
+    document.body.classList.remove('locked');
+    $('lock').hidden = true;
+    render();
+    autoSync();
+  }
+  $('lockForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var p = $('lockPassword').value.trim();
+    if (!p) return;
+    checkPassword(p).then(function(ok){
+      if (!ok) {
+        $('lockError').textContent = 'Неверный пароль.';
+        $('lockError').hidden = false;
+        $('lockPassword').select();
+        return;
+      }
+      savePassword(p, $('lockRemember').checked);
+      unlock(p);
+    });
+  });
+  $('logoutBtn').addEventListener('click', function(){ lock(''); });
 
   // Автосинхронизация: при открытии, при возврате на вкладку и раз в минуту.
   // Пока открыта карточка, таблицу не перечитываем, чтобы не сбить ввод.
   function autoSync(){
-    if (!state.scriptUrl || document.hidden || dealDialog.open) return;
+    if (!unlocked || !state.scriptUrl || document.hidden || dealDialog.open) return;
     syncAll().catch(function(){});
   }
-  autoSync();
+
+  var saved = readSavedPassword();
+  if (saved) {
+    checkPassword(saved).then(function(ok){ if (ok) unlock(saved); else lock(''); });
+  } else {
+    lock('');
+  }
   setInterval(autoSync, 60000);
   document.addEventListener('visibilitychange', autoSync);
   window.addEventListener('online', autoSync);
