@@ -729,13 +729,16 @@
       </div>
     </div>
 
-    <div class="group-title">Расходы</div>
-    <div class="exp-head" aria-hidden="true">
-      <span>Статья расхода</span><span>Категория</span><span>Сумма</span><span></span>
-    </div>
-    <div class="exp-rows" id="expRows"></div>
-    <div class="exp-add">
-      <button type="button" class="btn btn-outline btn-sm" id="addExpense">+ Добавить расход</button>
+    <!-- Расходы: у «Расхода без клиента»; у карточки клиента только если они уже были записаны раньше -->
+    <div id="expenseBlock">
+      <div class="group-title">Расходы</div>
+      <div class="exp-head" aria-hidden="true">
+        <span>Статья расхода</span><span>Категория</span><span>Сумма</span><span></span>
+      </div>
+      <div class="exp-rows" id="expRows"></div>
+      <div class="exp-add">
+        <button type="button" class="btn btn-outline btn-sm" id="addExpense">+ Добавить расход</button>
+      </div>
     </div>
 
     <div data-deal-only>
@@ -752,7 +755,7 @@
     </div>
 
     <div class="exp-total">
-      <span>Расходы: <strong id="expTotalView">0</strong></span>
+      <span id="expTotalLine">Расходы: <strong id="expTotalView">0</strong></span>
       <span data-deal-only>На статьи: <strong id="shareTotalView">0</strong></span>
       <span data-deal-only>Остаётся: <strong class="profit" id="profitView">0</strong></span>
     </div>
@@ -944,6 +947,8 @@
   var editingId = null;
   var draftExpenses = [];
   var draftShares = [];
+  // У карточки клиента уже были записаны расходы (до того, как их убрали из формы)
+  var legacyExpenses = false;
   var activeCategories = [];
   var syncError = '';
   // Скрипт только что обновили: всё из браузера нужно отправить заново
@@ -1426,6 +1431,9 @@
     Array.prototype.forEach.call(dealForm.querySelectorAll('[data-deal-only]'), function(n){ n.hidden = general; });
     Array.prototype.forEach.call(dealForm.querySelectorAll('[data-general-only]'), function(n){ n.hidden = !general; });
     $('client').required = !general;
+    var showExpenses = general || legacyExpenses;
+    $('expenseBlock').hidden = !showExpenses;
+    $('expTotalLine').hidden = !showExpenses;
     if (!editingId) $('dealDialogTitle').textContent = general ? 'Новый расход' : 'Новая карточка';
     updateTotals();
   }
@@ -1435,6 +1443,7 @@
     editingId = d ? d.id : null;
     dealForm.reset();
     if (d) general = isGeneral(d);
+    legacyExpenses = !!d && !general && expensesOf(d).length > 0;
     $('dealDialogTitle').textContent = d ? (general ? 'Расход без клиента' : d.client) : '';
     $('deleteDeal').hidden = !d;
     dealForm.elements.kind.value = general ? 'general' : 'deal';
@@ -1559,7 +1568,7 @@
     var view = $('restView');
     view.textContent = rest > 0 ? money(rest, cur) : 'Оплачено полностью';
     view.className = 'readonly-num' + (rest > 0 ? '' : ' paid');
-    var exp = draftExpenses.reduce(function(s, x){ return s + num(x.amount); }, 0);
+    var exp = $('expenseBlock').hidden ? 0 : draftExpenses.reduce(function(s, x){ return s + num(x.amount); }, 0);
     $('expTotalView').textContent = money(exp, cur);
     var left = price - exp - shareTotal;
     var profit = $('profitView');
@@ -1578,7 +1587,7 @@
     e.preventDefault();
     if (!dealForm.checkValidity()) { dealForm.reportValidity(); return; }
     var general = formGeneral();
-    var expenses = draftExpenses.filter(function(x){ return (x.item || '').trim() || num(x.amount); }).map(function(x){
+    var expenses = !general && !legacyExpenses ? [] : draftExpenses.filter(function(x){ return (x.item || '').trim() || num(x.amount); }).map(function(x){
       return { id: x.id || newId(), item: (x.item || '').trim(), category: x.category || 'Прочее', amount: num(x.amount) };
     });
     if (general && !expenses.some(function(x){ return x.amount > 0; })) {
