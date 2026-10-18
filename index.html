@@ -152,7 +152,46 @@
   /* hero + итоги */
   .hero{ padding-top: 130px; padding-bottom: 48px; }
   .hero h1{ margin-bottom: 32px; }
-  .stats-grid{ display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+  /* распределение выручки */
+  .flow-card{
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 24px 24px;
+  }
+  .flow-title{ font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 16px; }
+  .flow{ display:flex; align-items:stretch; gap: 12px; }
+  .flow-item{ flex: 1 1 0; min-width: 0; }
+  .flow-item .cap, .stat-card .cap{ font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .flow-item .num{
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: 6px;
+    color: var(--gold);
+    font-variant-numeric: lining-nums tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .flow-item .hint{ margin-top: 4px; }
+  .flow-item.expense .num{ color: var(--danger); }
+  .flow-item.share .num{ color: #c79bf0; }
+  .flow-item.left .num{ color: var(--ok); font-size: 30px; }
+  .flow-item.left.loss .num{ color: var(--danger); }
+  .flow-op{ align-self: center; font-size: 26px; color: var(--faint); font-weight: 300; }
+  .share-tiles{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .share-tile{ background: var(--bg-panel); border: 1px solid var(--border); border-left: 3px solid #c79bf0; border-radius: 4px; padding: 10px 14px; min-width: 0; }
+  .share-tile .name{ font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .share-tile .sum{ font-weight: 700; font-size: 17px; font-variant-numeric: lining-nums tabular-nums; }
+  .share-tile .pct{ font-size: 12px; color: var(--faint); }
+  .share-tiles .empty-note{ grid-column: 1 / -1; font-size: 14px; color: var(--faint); }
+  .pay-row{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
   .stat-card{
     background: var(--bg-panel-2);
     border: 1px solid var(--border);
@@ -429,12 +468,27 @@
   .exp-head{ font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
   .exp-rows{ display:flex; flex-direction:column; gap: 10px; }
   .exp-row .icon-btn{ height: 46px; font-size: 18px; padding: 0; }
+  .exp-add{ margin: 14px 0 8px; }
+  .share-hint{ margin: -6px 0 14px; }
+  .share-amount{
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 13px 14px;
+    font-weight: 700;
+    color: #c79bf0;
+    font-variant-numeric: lining-nums tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .exp-total{
     display:flex;
-    justify-content:space-between;
-    gap: 16px;
+    justify-content:flex-end;
+    gap: 8px 20px;
     flex-wrap: wrap;
-    margin: 14px 0 24px;
+    margin: 18px 0 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
     font-size: 14px;
     color: var(--muted);
   }
@@ -463,15 +517,16 @@
   footer{ padding: 40px 0; border-top: 1px solid var(--border); text-align:center; }
   footer p{ font-size: 13px; color: #7a7a7a; }
 
-  @media (max-width: 1100px){
-    .stats-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 1000px){
+    .flow{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .flow-op{ display:none; }
   }
   @media (max-width: 860px){
     .container{ padding: 0 16px; }
     .logo{ font-size: 16px; letter-spacing: 2px; }
     .logo span{ font-size: 11px; letter-spacing: 2px; }
-    .stats-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .stats-grid .stat-card:last-child{ grid-column: 1 / -1; }
+    .flow-card{ padding: 18px 16px 20px; }
+    .pay-row{ gap: 12px; }
     .form-row, .form-row.three{ grid-template-columns: 1fr; gap: 0; }
     .dialog-inner{ padding: 28px 18px 24px; }
     .deals{ grid-template-columns: 1fr; }
@@ -486,7 +541,9 @@
     .header-actions .btn{ padding: 10px 12px; font-size: 11px; letter-spacing: .5px; }
   }
   @media (max-width: 480px){
-    .stats-grid{ grid-template-columns: 1fr; }
+    .flow-item .num{ font-size: 20px; }
+    .flow-item.left .num{ font-size: 24px; }
+    .pay-row{ grid-template-columns: 1fr; }
     .bar-row{ grid-template-columns: minmax(0, 1fr) auto; }
     .bar-track{ grid-column: 1 / -1; grid-row: 2; }
   }
@@ -531,27 +588,40 @@
         <button type="button" class="btn btn-outline btn-sm filter-btn" id="openFilters">Фильтры <span class="badge" id="filterBadge" hidden>0</span></button>
       </div>
       <div class="filter-summary" id="filterSummary"></div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="cap">Сумма услуг</div>
-          <div class="num" id="statPrice">0</div>
+      <div class="flow-card">
+        <div class="flow-title">Распределение выручки</div>
+        <div class="flow">
+          <div class="flow-item">
+            <div class="cap">Выручка</div>
+            <div class="num" id="statPrice">0</div>
+          </div>
+          <span class="flow-op" aria-hidden="true">−</span>
+          <div class="flow-item expense">
+            <div class="cap">Расходы</div>
+            <div class="num" id="statExpenses">0</div>
+            <div class="hint" id="statExpensesHint" hidden></div>
+          </div>
+          <span class="flow-op" aria-hidden="true">−</span>
+          <div class="flow-item share">
+            <div class="cap">На статьи</div>
+            <div class="num" id="statShares">0</div>
+          </div>
+          <span class="flow-op" aria-hidden="true">=</span>
+          <div class="flow-item left" id="statProfitCard">
+            <div class="cap">Остаётся</div>
+            <div class="num" id="statProfit">0</div>
+          </div>
         </div>
+        <div class="share-tiles" id="shareTiles"></div>
+      </div>
+      <div class="pay-row">
         <div class="stat-card">
-          <div class="cap">Получено</div>
+          <div class="cap">Получено от клиентов</div>
           <div class="num" id="statPaid">0</div>
         </div>
         <div class="stat-card debt">
           <div class="cap">Остаток к получению</div>
           <div class="num" id="statRest">0</div>
-        </div>
-        <div class="stat-card expense">
-          <div class="cap">Расходы</div>
-          <div class="num" id="statExpenses">0</div>
-          <div class="hint" id="statExpensesHint" hidden>по выбранным категориям</div>
-        </div>
-        <div class="stat-card profit" id="statProfitCard">
-          <div class="cap">Прибыль</div>
-          <div class="num" id="statProfit">0</div>
         </div>
       </div>
     </div>
@@ -664,9 +734,27 @@
       <span>Статья расхода</span><span>Категория</span><span>Сумма</span><span></span>
     </div>
     <div class="exp-rows" id="expRows"></div>
-    <div class="exp-total">
+    <div class="exp-add">
       <button type="button" class="btn btn-outline btn-sm" id="addExpense">+ Добавить расход</button>
-      <span>Расходы: <strong id="expTotalView">0</strong><span data-deal-only> · Прибыль: <strong class="profit" id="profitView">0</strong></span></span>
+    </div>
+
+    <div data-deal-only>
+      <div class="group-title">Отчисления от выручки</div>
+      <div class="hint share-hint">Процент считается от стоимости услуги. Статьи, которые вы впишете, появятся на главном экране.</div>
+      <div class="exp-head" aria-hidden="true">
+        <span>Куда ушли деньги</span><span>% от выручки</span><span>Сумма</span><span></span>
+      </div>
+      <div class="exp-rows" id="shareRows"></div>
+      <datalist id="shareList"></datalist>
+      <div class="exp-add">
+        <button type="button" class="btn btn-outline btn-sm" id="addShare">+ Добавить статью</button>
+      </div>
+    </div>
+
+    <div class="exp-total">
+      <span>Расходы: <strong id="expTotalView">0</strong></span>
+      <span data-deal-only>На статьи: <strong id="shareTotalView">0</strong></span>
+      <span data-deal-only>Остаётся: <strong class="profit" id="profitView">0</strong></span>
     </div>
 
     <div class="field">
@@ -711,7 +799,7 @@
           <option value="date-asc">Сначала старые</option>
           <option value="expenses">Больше расходов</option>
           <option value="rest">Больше остаток</option>
-          <option value="profit">Больше прибыль</option>
+          <option value="profit">Больше остаётся</option>
           <option value="price">Дороже услуга</option>
           <option value="client">Клиент А–Я</option>
         </select>
@@ -855,10 +943,11 @@
   var state = loadState();
   var editingId = null;
   var draftExpenses = [];
+  var draftShares = [];
   var activeCategories = [];
   var syncError = '';
-  // Версия скрипта в таблице: со 2-й версии хранится способ оплаты
-  var scriptVersion = 2;
+  // Скрипт только что обновили: всё из браузера нужно отправить заново
+  var needResend = false;
 
   function loadState(){
     var s = null;
@@ -872,6 +961,8 @@
       deals: deals,
       deletes: Array.isArray(s.deletes) ? s.deletes : [],
       customCategories: Array.isArray(s.customCategories) ? s.customCategories : [],
+      // Версия скрипта в таблице: 2 — способ оплаты, 3 — отчисления по статьям
+      scriptVersion: s.scriptVersion || 0,
       syncOff: !!s.syncOff,
       scriptUrl: s.syncOff ? '' : (s.scriptUrl || DEFAULT_SCRIPT_URL),
       prefs: {
@@ -940,7 +1031,25 @@
   function expenseSum(d, onlyActive){
     return expensesOf(d).reduce(function(s, x){ return s + (onlyActive && !inActiveCategories(x) ? 0 : num(x.amount)); }, 0);
   }
-  function profitOf(d){ return num(d.price) - expenseSum(d, false); }
+  // Отчисления от выручки: статья и процент от стоимости услуги
+  function sharesOf(d){ return Array.isArray(d.shares) ? d.shares : []; }
+  function shareAmount(price, percent){ return Math.round(num(price) * num(percent)) / 100; }
+  function sharesSum(d){
+    return sharesOf(d).reduce(function(s, x){ return s + shareAmount(d.price, x.percent); }, 0);
+  }
+  // Сколько остаётся: выручка минус расходы минус отчисления по статьям
+  function profitOf(d){ return num(d.price) - expenseSum(d, false) - sharesSum(d); }
+  function shareKey(name){ return (name || '').trim().toLowerCase(); }
+  function allShareNames(){
+    var seen = {}, list = [];
+    state.deals.forEach(function(d){
+      sharesOf(d).forEach(function(x){
+        var k = shareKey(x.name);
+        if (k && !seen[k]) { seen[k] = true; list.push(x.name.trim()); }
+      });
+    });
+    return list.sort(function(a, b){ return a.localeCompare(b, 'ru'); });
+  }
 
   function allCategories(){
     var used = [];
@@ -996,7 +1105,7 @@
       if (pay === 'debt' && restOf(d) <= 0) return false;
       if (pay === 'paid' && (general || restOf(d) > 0)) return false;
       if (!q) return true;
-      var text = [titleOf(d), d.contact, d.service, d.note].concat(expensesOf(d).map(function(x){ return x.item + ' ' + x.category; }));
+      var text = [titleOf(d), d.contact, d.service, d.note].concat(expensesOf(d).map(function(x){ return x.item + ' ' + x.category; }), sharesOf(d).map(function(x){ return x.name; }));
       return text.join(' ').toLowerCase().indexOf(q) !== -1;
     });
   }
@@ -1118,22 +1227,47 @@
 
   function renderStats(deals){
     var cur = state.prefs.currency;
-    var price = 0, paid = 0, rest = 0, exp = 0, allExp = 0;
+    var price = 0, paid = 0, rest = 0, exp = 0, allExp = 0, shares = 0;
+    var byShare = Object.create(null);
     deals.forEach(function(d){
       price += num(d.price);
       paid += paidOf(d);
       rest += restOf(d);
       exp += expenseSum(d, true);
       allExp += expenseSum(d, false);
+      sharesOf(d).forEach(function(x){
+        var a = shareAmount(d.price, x.percent);
+        var k = shareKey(x.name) || 'без названия';
+        if (!byShare[k]) byShare[k] = { name: (x.name || '').trim() || 'Без названия', sum: 0 };
+        byShare[k].sum += a;
+        shares += a;
+      });
     });
-    var profit = price - allExp;
+    var left = price - allExp - shares;
     $('statPrice').textContent = money(price, cur);
     $('statPaid').textContent = money(paid, cur);
     $('statRest').textContent = money(rest, cur);
-    $('statExpenses').textContent = money(exp, cur);
+    $('statExpenses').textContent = money(allExp, cur);
     $('statExpensesHint').hidden = !activeCategories.length;
-    $('statProfit').textContent = money(profit, cur);
-    $('statProfitCard').className = 'stat-card ' + (profit < 0 ? 'loss' : 'profit');
+    $('statExpensesHint').textContent = 'из них по выбранным категориям: ' + money(exp, cur);
+    $('statShares').textContent = money(shares, cur);
+    $('statProfit').textContent = money(left, cur);
+    $('statProfitCard').className = 'flow-item left' + (left < 0 ? ' loss' : '');
+
+    // Плитка на каждую статью отчислений, крупные первыми
+    var tiles = $('shareTiles');
+    tiles.textContent = '';
+    var list = Object.keys(byShare).map(function(k){ return byShare[k]; }).sort(function(a, b){ return b.sum - a.sum; });
+    if (!list.length) {
+      tiles.appendChild(el('div', { 'class': 'empty-note', text: 'Статей пока нет. Откройте карточку клиента и добавьте в «Отчисления от выручки», куда уходит процент: статья появится здесь.' }));
+    }
+    list.forEach(function(x){
+      tiles.appendChild(el('div', { 'class': 'share-tile' }, [
+        el('div', { 'class': 'name', text: x.name }),
+        el('div', { 'class': 'sum', text: money(x.sum, cur) }),
+        el('div', { 'class': 'pct', text: price ? (Math.round(x.sum / price * 1000) / 10) + '% от выручки' : '' })
+      ]));
+    });
   }
 
   function renderSpending(deals){
@@ -1236,11 +1370,17 @@
             el('span', { 'class': 'sum', text: money(num(x.amount), cur) })
           ]);
         }).concat(exps.length > shown.length ? [el('li', { 'class': 'more', text: 'и ещё ' + (exps.length - shown.length) })] : [])) : null,
+        !general && sharesOf(d).length ? el('ul', { 'class': 'deal-expenses' }, sharesOf(d).map(function(x){
+          return el('li', null, [
+            el('span', { 'class': 'item', text: (x.name || 'Без названия') + ' · ' + num(x.percent) + '%' }),
+            el('span', { 'class': 'sum', style: 'color:#c79bf0', text: money(shareAmount(d.price, x.percent), cur) })
+          ]);
+        })) : null,
         general
           ? (d.note ? el('div', { 'class': 'deal-foot' }, [el('span', { 'class': 'deal-service', text: d.note })]) : null)
           : el('div', { 'class': 'deal-foot' }, [
               el('span', { text: d.contact || '' }),
-              el('span', null, ['Прибыль: ', el('span', { 'class': 'profit' + (profit < 0 ? ' loss' : ''), text: money(profit, cur) })])
+              el('span', null, ['Остаётся: ', el('span', { 'class': 'profit' + (profit < 0 ? ' loss' : ''), text: money(profit, cur) })])
             ])
       ]);
       card.addEventListener('click', function(){ openDeal(d.id); });
@@ -1262,9 +1402,9 @@
       text = 'Google Таблица недоступна: ' + syncError + '. Не отправлено изменений: ' + pending + '. Они сохранены в браузере и уйдут при следующей синхронизации.';
     } else if (pending) {
       text = 'Отправка в Google Таблицу...';
-    } else if (scriptVersion < 2) {
+    } else if (state.scriptVersion && state.scriptVersion < 3) {
       cls += ' warn';
-      text = 'Способ оплаты пока не сохраняется в Google Таблицу: обновите код Google Apps Script из файла google-apps-script.js и сделайте новое развертывание.';
+      text = 'Способ оплаты и отчисления по статьям пока не сохраняются в Google Таблицу: обновите код Google Apps Script из файла google-apps-script.js и сделайте новое развертывание.';
     } else {
       cls += ' ok';
       text = 'Все изменения записаны в Google Таблицу.';
@@ -1312,7 +1452,18 @@
     }
     draftExpenses = d ? expensesOf(d).map(function(x){ return { id: x.id, item: x.item, category: x.category, amount: x.amount }; }) : [];
     if (!draftExpenses.length) draftExpenses.push(blankExpense());
+    // Новой карточке подставляем статьи и проценты из последней карточки с отчислениями
+    var source = d;
+    if (!d) {
+      source = state.deals.filter(function(x){ return sharesOf(x).length; })
+        .sort(function(a, b){ return (b.createdAt || '') < (a.createdAt || '') ? -1 : 1; })[0];
+    }
+    draftShares = source ? sharesOf(source).map(function(x){ return { id: d ? x.id : newId(), name: x.name, percent: x.percent }; }) : [];
+    var names = $('shareList');
+    names.textContent = '';
+    allShareNames().forEach(function(n){ names.appendChild(el('option', { value: n })); });
     renderExpenseRows();
+    renderShareRows();
     applyKind();
     dealDialog.showModal();
     dealDialog.scrollTop = 0;
@@ -1365,8 +1516,42 @@
     inputs[inputs.length - 1].focus();
   });
 
+  function renderShareRows(){
+    var box = $('shareRows');
+    box.textContent = '';
+    draftShares.forEach(function(x, i){
+      var name = el('input', { type: 'text', 'class': 'exp-item', list: 'shareList', value: x.name || '', maxlength: '120', placeholder: 'Например: налог, партнёру, фонд', 'aria-label': 'Куда ушли деньги' });
+      name.addEventListener('input', function(){ x.name = name.value; });
+      var pct = el('input', { type: 'number', min: '0', max: '100', step: '0.1', inputmode: 'decimal', value: x.percent === '' || x.percent === undefined ? '' : String(x.percent), placeholder: '%', 'aria-label': 'Процент от выручки' });
+      var amount = el('div', { 'class': 'share-amount', 'data-share-amount': String(i) });
+      pct.addEventListener('input', function(){ x.percent = pct.value; updateTotals(); });
+      box.appendChild(el('div', { 'class': 'exp-row' }, [
+        name, pct, amount,
+        el('button', { type: 'button', 'class': 'icon-btn', text: '×', title: 'Убрать статью', 'aria-label': 'Убрать статью', onclick: function(){
+          draftShares.splice(i, 1);
+          renderShareRows();
+        } })
+      ]));
+    });
+    updateTotals();
+  }
+  $('addShare').addEventListener('click', function(){
+    draftShares.push({ id: newId(), name: '', percent: '' });
+    renderShareRows();
+    var inputs = $('shareRows').querySelectorAll('.exp-item');
+    inputs[inputs.length - 1].focus();
+  });
+
   function updateTotals(){
     var cur = formGeneral() ? $('generalCurrency').value : $('currency').value;
+    var shareTotal = 0;
+    draftShares.forEach(function(x, i){
+      var a = shareAmount($('price').value, x.percent);
+      shareTotal += a;
+      var cell = $('shareRows').querySelector('[data-share-amount="' + i + '"]');
+      if (cell) cell.textContent = money(a, cur);
+    });
+    $('shareTotalView').textContent = money(shareTotal, cur);
     var price = num($('price').value);
     var pre = num($('prepayment').value);
     var paidAll = $('restPaid').checked;
@@ -1376,9 +1561,10 @@
     view.className = 'readonly-num' + (rest > 0 ? '' : ' paid');
     var exp = draftExpenses.reduce(function(s, x){ return s + num(x.amount); }, 0);
     $('expTotalView').textContent = money(exp, cur);
+    var left = price - exp - shareTotal;
     var profit = $('profitView');
-    profit.textContent = money(price - exp, cur);
-    profit.className = 'profit' + (price - exp < 0 ? ' loss' : '');
+    profit.textContent = money(left, cur);
+    profit.className = 'profit' + (left < 0 ? ' loss' : '');
   }
   dealForm.addEventListener('input', function(e){
     if (['price', 'prepayment'].indexOf(e.target.id) !== -1) updateTotals();
@@ -1418,6 +1604,9 @@
       d.currency = $('generalCurrency').value;
     }
     d.expenses = expenses;
+    d.shares = general ? [] : draftShares.filter(function(x){ return (x.name || '').trim() || num(x.percent); }).map(function(x){
+      return { id: x.id || newId(), name: (x.name || '').trim() || 'Без названия', percent: num(x.percent) };
+    });
     d.payMethod = dealForm.elements.payMethod.value;
     d.updatedAt = stamp();
     markDirty(d);
@@ -1451,9 +1640,17 @@
         if (j.result !== 'success') throw new Error(j.message || 'скрипт вернул ошибку');
         // Старый скрипт CRM отвечает успехом, но карточек не хранит
         if (j.app !== APP_ID) throw new Error('по этому адресу установлен другой скрипт, нужен новый из файла google-apps-script.js');
-        scriptVersion = j.version || 1;
+        noteVersion(j);
         return j;
       });
+  }
+  function noteVersion(j){
+    var v = j.version || 1;
+    if (v > state.scriptVersion) {
+      state.deals.forEach(markDirty);
+      needResend = true;
+    }
+    state.scriptVersion = v;
   }
   function toRemote(x){
     var o = {};
@@ -1483,6 +1680,7 @@
         syncing = null;
         saveState();
         renderSyncStatus();
+        if (needResend) { needResend = false; return pushChanges(); }
       });
     renderSyncStatus();
     return syncing;
@@ -1506,13 +1704,17 @@
       state.deals = (Array.isArray(j.deals) ? j.deals : []).filter(function(d){
         return d.id && mineIds.indexOf(d.id) === -1 && state.deletes.indexOf(d.id) === -1;
       }).concat(mine);
-      // Старый скрипт не хранит способ оплаты: оставляем тот, что записан в этом браузере
+      // Старый скрипт не хранит способ оплаты и отчисления: оставляем то, что записано в этом браузере
       state.deals.forEach(function(d){
-        if (!d.payMethod && before[d.id] && before[d.id].payMethod) d.payMethod = before[d.id].payMethod;
+        var old = before[d.id];
+        if (!old) return;
+        if (!d.payMethod && old.payMethod) d.payMethod = old.payMethod;
+        if (d.shares === undefined && old.shares) d.shares = old.shares;
       });
       syncError = '';
       saveState();
       if (!dealDialog.open) render(); else renderSyncStatus();
+      if (needResend) { needResend = false; return pushChanges(); }
     }).catch(function(err){
       syncError = err.message || 'нет соединения';
       renderSyncStatus();
@@ -1585,9 +1787,10 @@
     a.remove();
   }
   $('exportDeals').addEventListener('click', function(){
-    var head = ['Дата', 'Клиент', 'Контакт', 'Услуга', 'Способ оплаты', 'Валюта', 'Стоимость', 'Предоплата', 'Получено', 'Остаток', 'Расходы', 'Прибыль', 'Заметка'];
+    var head = ['Дата', 'Клиент', 'Контакт', 'Услуга', 'Способ оплаты', 'Валюта', 'Стоимость', 'Предоплата', 'Получено', 'Остаток', 'Расходы', 'Отчисления по статьям', 'Остаётся', 'Заметка'];
     downloadCsv('etno-consult-kartochki.csv', [head].concat(visibleDeals().map(function(d){
-      return [ruDate(d.date), titleOf(d), d.contact, d.service, methodText(d), d.currency, num(d.price), num(d.prepayment), paidOf(d), restOf(d), expenseSum(d, false), profitOf(d), d.note];
+      return [ruDate(d.date), titleOf(d), d.contact, d.service, methodText(d), d.currency, num(d.price), num(d.prepayment), paidOf(d), restOf(d), expenseSum(d, false),
+        sharesOf(d).map(function(x){ return x.name + ' ' + num(x.percent) + '% = ' + shareAmount(d.price, x.percent); }).join('; '), profitOf(d), d.note];
     })));
   });
   $('exportExpenses').addEventListener('click', function(){
